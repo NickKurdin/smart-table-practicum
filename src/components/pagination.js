@@ -1,18 +1,33 @@
-import {getPages} from "../lib/utils.js";
+import {getPages} from '../lib/utils.js';
 
 export const initPagination = ({pages, fromRow, toRow, totalRows}, createPage) => {
-    // @todo: #2.3 — подготовить шаблон кнопки для страницы и очистить контейнер
+    const pageTemplate = pages.firstElementChild.cloneNode(true);
+    pages.replaceChildren();
 
     return (data, state, action) => {
-        // @todo: #2.1 — посчитать количество страниц, объявить переменные и константы
+        const {rowsPerPage} = state;
+        const pageCount = Math.ceil(data.length / rowsPerPage);
+        let {page} = state;
 
-        // @todo: #2.6 — обработать действия
+        switch (action?.name) {
+            case 'first': page = 1; break;
+            case 'prev': page -= 1; break;
+            case 'next': page += 1; break;
+            case 'last': page = pageCount; break;
+        }
 
-        // @todo: #2.4 — получить список видимых страниц и вывести их
+        page = Math.max(1, Math.min(pageCount, page));
 
-        // @todo: #2.5 — обновить статус пагинации
+        const visiblePages = getPages(page, pageCount, 5);
+        pages.replaceChildren(...visiblePages.map(number => createPage(
+            pageTemplate.cloneNode(true), number, page
+        )));
 
-        // @todo: #2.2 — посчитать сколько строк нужно пропустить и получить срез данных
-        return data.slice(0, 10);
-    }
-}
+        const skip = (page - 1) * rowsPerPage;
+        fromRow.textContent = data.length ? skip + 1 : 0;
+        toRow.textContent = Math.min(skip + rowsPerPage, data.length);
+        totalRows.textContent = data.length;
+
+        return data.slice(skip, skip + rowsPerPage);
+    };
+};
