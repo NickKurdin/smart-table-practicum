@@ -1,17 +1,22 @@
-import {sortCollection, sortMap} from '../lib/sort.js';
+import {sortMap} from '../lib/sort.js';
 
 export function initSorting(columns) {
-    return (data, state, action) => {
+    return (query, action) => {
         if (action?.name === 'sort') {
             action.dataset.value = sortMap[action.dataset.value];
-            columns.forEach(column => {
+            for (const column of columns) {
                 if (column !== action) {
                     column.dataset.value = 'none';
                 }
-            });
+            }
         }
 
         const activeColumn = columns.find(column => column.dataset.value !== 'none');
-        return sortCollection(data, activeColumn?.dataset.field, activeColumn?.dataset.value);
+        if (!activeColumn) {
+            return query;
+        }
+
+        const {field, value} = activeColumn.dataset;
+        return {...query, sort: `${field}:${value}`};
     };
 }

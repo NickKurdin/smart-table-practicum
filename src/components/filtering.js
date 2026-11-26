@@ -1,21 +1,22 @@
-import {createComparison, defaultRules} from '../lib/compare.js';
+const filterNames = ['date', 'customer', 'seller', 'totalFrom', 'totalTo'];
 
-const compare = createComparison(defaultRules);
-
-export function initFiltering(elements, indexes) {
-    for (const [name, index] of Object.entries(indexes)) {
-        for (const value of new Set(Object.values(index))) {
-            elements[name].add(new Option(value, value));
+export function initFiltering(sellerSelect) {
+    function updateSellers(sellers) {
+        for (const name of new Set(Object.values(sellers))) {
+            sellerSelect.add(new Option(name, name));
         }
     }
 
-    return (data, state, action) => {
-        if (action?.name === 'clear') {
-            const field = action.dataset.field;
-            action.form.elements.namedItem(field).value = '';
-            state = {...state, [field]: ''};
+    function applyFiltering(query, state) {
+        const filters = {};
+        for (const name of filterNames) {
+            const value = state[name];
+            if (value !== '') {
+                filters[`filter[${name}]`] = value;
+            }
         }
+        return {...query, ...filters};
+    }
 
-        return data.filter(row => compare(row, state));
-    };
+    return {applyFiltering, updateSellers};
 }

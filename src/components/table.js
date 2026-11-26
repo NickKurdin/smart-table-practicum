@@ -19,11 +19,27 @@ export function initTable(settings, onAction) {
         root.container.append(template.container);
     }
 
-    root.container.addEventListener('change', () => onAction());
-    root.container.addEventListener('reset', () => setTimeout(onAction));
+    let inputTimer;
+
+    function triggerAction(action) {
+        clearTimeout(inputTimer);
+        onAction(action);
+    }
+
+    root.container.addEventListener('input', event => {
+        if (event.target.type === 'text') {
+            clearTimeout(inputTimer);
+            inputTimer = setTimeout(triggerAction, 250);
+        }
+    });
+    root.container.addEventListener('change', () => triggerAction());
+    root.container.addEventListener('reset', () => {
+        clearTimeout(inputTimer);
+        setTimeout(triggerAction);
+    });
     root.container.addEventListener('submit', event => {
         event.preventDefault();
-        onAction(event.submitter);
+        triggerAction(event.submitter);
     });
 
     const render = data => {
